@@ -1,0 +1,162 @@
+---
+interface Props {
+	customCrumbs?: { label: string; url: string }[];
+}
+
+const { customCrumbs } = Astro.props;
+const pathname = Astro.url.pathname;
+
+// Clean up pathname (remove trailing slashes, etc.)
+const cleanPath = pathname.replace(/\/$/, '');
+const segments = cleanPath.split('/').filter(Boolean);
+
+let crumbs: { label: string; url: string }[] = [];
+
+if (customCrumbs && customCrumbs.length > 0) {
+	crumbs = customCrumbs;
+} else {
+	// Build dynamic breadcrumbs from URL structure
+	crumbs.push({ label: 'Home', url: '/' });
+
+	let currentUrl = '';
+	segments.forEach((seg, index) => {
+		currentUrl += `/${seg}`;
+		
+		// Clean and format segment name for beautiful display
+		let label = seg.replace(/-/g, ' ');
+		// Capitalize words
+		label = label.replace(/\b\w/g, (c) => c.toUpperCase());
+
+		// Custom mappings for better user presentation
+		if (seg.toLowerCase() === 'jobs') {
+			label = 'Latest Jobs';
+			currentUrl = '/latest-jobs'; // point the intermediate breadcrumb to the main listing page
+		}
+		if (seg.toLowerCase() === 'latest-jobs') label = 'Latest Jobs';
+		if (seg.toLowerCase() === 'admit-cards') label = 'Admit Cards';
+		if (seg.toLowerCase() === 'certificate-states') label = 'Certificate Verification';
+
+		crumbs.push({ label, url: currentUrl });
+	});
+}
+
+// Generate Google SEO Structured Data (JSON-LD BreadcrumbList)
+const schemaClass = {
+	"@context": "https://schema.org",
+	"@type": "BreadcrumbList",
+	"itemListElement": crumbs.map((crumb, index) => ({
+		"@type": "ListItem",
+		"position": index + 1,
+		"name": crumb.label,
+		"item": new URL(crumb.url, Astro.url.origin).href
+	}))
+};
+
+const jsonLd = JSON.stringify(schemaClass);
+---
+
+{crumbs.length > 1 && (
+	<div class="breadcrumb-wrapper">
+		<script type="application/ld+json" set:html={jsonLd} />
+		<nav aria-label="breadcrumb" class="breadcrumb-nav">
+			<ol class="breadcrumb-list">
+				{crumbs.map((crumb, index) => {
+					const isLast = index === crumbs.length - 1;
+					return (
+						<li class={`breadcrumb-item ${isLast ? 'active' : ''}`} aria-current={isLast ? 'page' : undefined}>
+							{!isLast ? (
+								<>
+									<a href={crumb.url} class="breadcrumb-link">{crumb.label}</a>
+									<span class="separator">/</span>
+								</>
+							) : (
+								<span class="breadcrumb-current">{crumb.label}</span>
+							)}
+						</li>
+					);
+				})}
+			</ol>
+		</nav>
+	</div>
+)}
+
+<style>
+	.breadcrumb-wrapper {
+		margin-top: 10px;
+		margin-bottom: 5px;
+	}
+
+	.breadcrumb-nav {
+		background-color: #ffffff;
+		border: 1px solid #e0e0e0;
+		border-radius: 6px;
+		padding: 10px 16px;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+	}
+
+	.breadcrumb-list {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		font-family: 'Poppins', Arial, sans-serif;
+		font-size: 14px;
+	}
+
+	.breadcrumb-item {
+		display: flex;
+		align-items: center;
+		line-height: 1.4;
+	}
+
+	.breadcrumb-link {
+		color: #0000ff;
+		text-decoration: none;
+		font-weight: 600;
+		transition: color 0.2s ease;
+	}
+
+	.breadcrumb-link:hover {
+		color: #ff0000;
+		text-decoration: underline;
+	}
+
+	.separator {
+		color: #888888;
+		margin: 0 8px;
+		font-size: 13px;
+		user-select: none;
+	}
+
+	.breadcrumb-current {
+		color: #555555;
+		font-weight: 600;
+		/* Truncate long titles on mobile */
+		display: inline-block;
+		max-width: 400px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		vertical-align: middle;
+	}
+
+	@media (max-width: 768px) {
+		.breadcrumb-nav {
+			padding: 8px 12px;
+		}
+		
+		.breadcrumb-list {
+			font-size: 13px;
+		}
+
+		.breadcrumb-current {
+			max-width: 180px;
+		}
+		
+		.separator {
+			margin: 0 5px;
+		}
+	}
+</style>

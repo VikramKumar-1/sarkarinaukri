@@ -1,0 +1,42 @@
+name: Auto-Scraper for Latest Jobs
+
+on:
+  schedule:
+    # Runs every 1 hour for faster updates
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Scraper Bot
+        run: npm run scrape
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add src/content/jobs/
+          # Only commit if there are changes
+          if ! git diff --staged --quiet; then
+            git commit -m "Auto-fetch: New job posts from Sarkari Result"
+            git push
+            echo "New jobs found and committed!"
+          else
+            echo "No new jobs found."
+          fi

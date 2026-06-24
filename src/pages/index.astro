@@ -1,0 +1,338 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const jobs = await getCollection('jobs');
+
+// Filter out junk test files & expired jobs FIRST!
+const currentDate = new Date().setHours(0, 0, 0, 0); // Start of today
+const validJobs = jobs.filter(job => {
+	// 1. Hide junk testing files
+	if (job.slug.includes('sarkariresult.com') || job.slug.includes('terms-and-conditions')) return false;
+	
+	// 2. Hide expired jobs
+	if (!job.data.expiryDate) return true; // Keep forever if no date
+	const expiryDate = new Date(job.data.expiryDate).setHours(0, 0, 0, 0);
+	return currentDate <= expiryDate; // Hide if today is strictly past the expiry date
+});
+
+// Sort by date (newest first)
+const sortedJobs = validJobs.sort((a, b) => new Date(b.data.postDate || new Date()).valueOf() - new Date(a.data.postDate || new Date()).valueOf());
+const currentYear = new Date().getFullYear();
+
+// Auto-generated SEO
+const autoTitle = `Sarkari Result | Latest Jobs, Admit Card, Results ${currentYear}`;
+const autoDesc = `Sarkari Result: Find the latest Government Jobs, Online Forms, Admit Cards, and Results. Your trusted source for Sarkari Results ${currentYear}.`;
+const autoKeywords = "sarkari result, sarkari results, latest jobs, admit card, government jobs, sarkari naukri";
+
+// Read from Admin Panel (if user typed something, use it, otherwise fallback to Auto)
+import homepageSettings from '../settings/homepage.json';
+
+const finalTitle = homepageSettings.customTitle || autoTitle;
+const finalDesc = homepageSettings.customDescription || autoDesc;
+const finalKeywords = homepageSettings.customKeywords || autoKeywords;
+
+// Auto-populate boxes to always show perfectly aligned items
+const generateDummies = (category, count) => {
+	const dummyTitles = {
+		'results': 'SSC CGL Tier 1 Result 2026 Declared',
+		'admit-card': 'UPSC Civil Services Prelims Admit Card 2026',
+		'latest-jobs': 'UP Police Sub Inspector SI Online Form 2026',
+		'admission': 'IGNOU Online Admission January 2026',
+		'answer-key': 'NTA NEET UG Official Answer Key 2026',
+		'certificate-verification': 'UP Board Class 10th / 12th Verification 2026'
+	};
+	return Array(count).fill(null).map((_, i) => ({
+		slug: `#`, // Dummy link
+		data: { title: `${dummyTitles[category]} (Placeholder ${i+1})` }
+	}));
+};
+
+// Top 3 Columns (25 items each)
+const resultsJobs = [...sortedJobs.filter(job => job.data.category === 'results'), ...generateDummies('results', 25)].slice(0, 25);
+const admitCardJobs = [...sortedJobs.filter(job => job.data.category === 'admit-card'), ...generateDummies('admit-card', 25)].slice(0, 25);
+const latestJobs = [...sortedJobs.filter(job => job.data.category === 'latest-jobs'), ...generateDummies('latest-jobs', 25)].slice(0, 25);
+
+// Bottom 3 Columns (6 items each)
+const admissionJobs = [...sortedJobs.filter(job => job.data.category === 'admission'), ...generateDummies('admission', 6)].slice(0, 6);
+const answerKeyJobs = [...sortedJobs.filter(job => job.data.category === 'answer-key'), ...generateDummies('answer-key', 6)].slice(0, 6);
+const certificateJobs = [...sortedJobs.filter(job => job.data.category === 'certificate-verification'), ...generateDummies('certificate-verification', 6)].slice(0, 6);
+
+// Hot Links Colors exactly matching screenshot
+const hotLinkColors = ['#ff0000', '#ff6600', '#ff00ff', '#0000aa', '#808000', '#0080ff', '#5c0000', '#008000'];
+
+// Smart Hot Links Logic: Get explicit checked links first, then fill remainder with latest jobs
+const explicitHotLinks = sortedJobs.filter(job => job.data.isHotLink);
+const fallbackJobs = sortedJobs.filter(job => !job.data.isHotLink);
+const hotLinksJobs = [...explicitHotLinks, ...fallbackJobs, ...generateDummies('latest-jobs', 8)].slice(0, 8);
+---
+
+<Layout 
+	title={finalTitle}
+	description={finalDesc}
+	keywords={finalKeywords}
+>
+	<!-- HOT LINKS GRID -->
+	<div class="hot-links-container">
+		{hotLinksJobs.map((job, index) => {
+			const bgColor = hotLinkColors[index % hotLinkColors.length];
+			return (
+				<a href={`/jobs/${job.slug}`} class="hot-link-box" style={`background-color: ${bgColor};`}>
+					<span class="hot-link-text">{job.data.title}</span>
+				</a>
+			);
+		})}
+	</div>
+
+	<!-- ALL 6 COLUMNS -->
+	<div class="grid-container">
+		
+		<!-- TOP ROW -->
+		<!-- Results Column -->
+		<div class="box">
+			<div class="box-header">Results</div>
+			<ul class="box-list">
+				{resultsJobs.length > 0 ? resultsJobs.map(job => (
+					<li><a href={`/jobs/${job.slug}`}>{job.data.title}</a></li>
+				)) : <li><a href="#">No Results Yet</a></li>}
+			</ul>
+			<div class="box-footer"><a href="/results">View More..</a></div>
+		</div>
+
+		<!-- Admit Card Column -->
+		<div class="box">
+			<div class="box-header">Admit Cards</div>
+			<ul class="box-list">
+				{admitCardJobs.length > 0 ? admitCardJobs.map(job => (
+					<li><a href={`/jobs/${job.slug}`}>{job.data.title}</a></li>
+				)) : <li><a href="#">No Admit Cards Yet</a></li>}
+			</ul>
+			<div class="box-footer"><a href="/admit-cards">View More..</a></div>
+		</div>
+
+		<!-- Latest Jobs Column -->
+		<div class="box">
+			<div class="box-header">Latest Jobs</div>
+			<ul class="box-list">
+				{latestJobs.length > 0 ? latestJobs.map(job => (
+					<li><a href={`/jobs/${job.slug}`}>{job.data.title}</a></li>
+				)) : <li><a href="#">No Jobs Yet</a></li>}
+			</ul>
+			<div class="box-footer"><a href="/latest-jobs">View More..</a></div>
+		</div>
+
+		<!-- BOTTOM ROW -->
+		<!-- Admission Column -->
+		<div class="box">
+			<div class="box-header">Admission</div>
+			<ul class="box-list">
+				{admissionJobs.length > 0 ? admissionJobs.map(job => (
+					<li><a href={`/jobs/${job.slug}`}>{job.data.title}</a></li>
+				)) : <li><a href="#">No Admissions Yet</a></li>}
+			</ul>
+			<div class="box-footer"><a href="/admission">View More..</a></div>
+		</div>
+
+		<!-- Answer Key Column -->
+		<div class="box">
+			<div class="box-header">Answer Key</div>
+			<ul class="box-list">
+				{answerKeyJobs.length > 0 ? answerKeyJobs.map(job => (
+					<li><a href={`/jobs/${job.slug}`}>{job.data.title}</a></li>
+				)) : <li><a href="#">No Answer Keys Yet</a></li>}
+			</ul>
+			<div class="box-footer"><a href="/answer-keys">View More..</a></div>
+		</div>
+
+		<!-- Certificate Column -->
+		<div class="box">
+			<div class="box-header">Certificate Verification</div>
+			<ul class="box-list">
+				{certificateJobs.length > 0 ? certificateJobs.map(job => (
+					<li><a href={`/jobs/${job.slug}`}>{job.data.title}</a></li>
+				)) : <li><a href="#">No Certificates Yet</a></li>}
+			</ul>
+			<div class="box-footer"><a href="/certificate-verification">View More..</a></div>
+		</div>
+
+	</div>
+</Layout>
+
+<style>
+	/* HOT LINKS Grid System */
+	.hot-links-container {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 6px; /* Tight classic gap */
+		margin-top: 15px;
+		margin-bottom: 25px;
+	}
+
+	.hot-link-box {
+		color: #ffffff;
+		text-align: center;
+		padding: 4px 8px;
+		font-family: Arial, Helvetica, sans-serif;
+		font-weight: bold;
+		text-decoration: none;
+		font-size: 16.5px; /* Perfect size for 2 lines */
+		border-radius: 3px; /* Very subtle rounding */
+		
+		/* Force exactly identical boxes */
+		height: 75px; 
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.2); /* Premium subtle shadow */
+	}
+
+	.hot-link-text {
+		display: -webkit-box;
+		-webkit-line-clamp: 2; /* Truncate exactly at 2 lines */
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		line-height: 1.3; /* Better breathing room */
+		width: 100%;
+	}
+
+	.hot-link-box:hover {
+		transform: translateY(-2px); /* Premium lift effect */
+		box-shadow: 0 4px 8px rgba(0,0,0,0.3); /* Premium hover shadow */
+		color: #fff;
+		text-decoration: underline;
+	}
+
+	@media (max-width: 900px) {
+		.hot-links-container {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		
+		/* Fix Hot Link typography on mobile */
+		.hot-link-box {
+			font-size: 13.5px;
+			height: 60px;
+			padding: 4px;
+		}
+
+		/* Hide the 7th and 8th hot link box on mobile to only show 6 */
+		.hot-link-box:nth-child(7),
+		.hot-link-box:nth-child(8) {
+			display: none;
+		}
+	}
+
+	/* Grid System for 6 Columns */
+	.grid-container {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 20px;
+	}
+
+
+
+	/* Box Styles (Exactly matching screenshot) */
+	.box {
+		background-color: #ffffff;
+		border: 1px solid #ffcc66; /* SarkariResult classic orange/tan border */
+	}
+
+	.box-header {
+		background-color: #8B0000; /* Dark Red header for all */
+		color: white;
+		font-size: 24px;
+		font-weight: bold;
+		text-align: center;
+		padding: 8px 10px;
+	}
+
+	/* Classic Sarkari Result UL/LI styling */
+	.box-list {
+		list-style-type: disc;
+		list-style-position: outside; /* Keeps bullets neatly outside the wrapping text */
+		padding: 15px 12px 15px 25px;
+		margin: 0;
+		line-height: 1.15;
+	}
+
+	.box-list li {
+		margin-bottom: 15px; /* Increased comfortable gap between job points on desktop and tablet */
+		color: #000;
+		line-height: 1.15; /* Explicitly overrides body line-height 1.6 */
+	}
+
+	.box-list li a {
+		font-family: Arial, Helvetica, sans-serif;
+		text-decoration: underline; /* Authentic blue underlines */
+		color: #0000ff; /* Classic pure blue link color */
+		font-size: 15px; /* Desktop font size */
+		font-weight: normal;
+		line-height: 1.15; /* Reduced gap between wrapped lines of text */
+		letter-spacing: normal;
+		display: inline;
+	}
+
+	.box-list li a:hover {
+		color: #ff0000; /* Hover Red */
+	}
+
+	.box-footer {
+		text-align: right;
+		padding: 10px;
+		border-top: 1px solid #ffcc66;
+	}
+
+	.box-footer a {
+		color: #8B0000;
+		text-decoration: none;
+		font-weight: bold;
+	}
+
+	.box-footer a:hover {
+		text-decoration: underline;
+	}
+
+	@media (max-width: 768px) {
+		.grid-container {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 2px; /* 2px gap creates the exact double orange border effect between boxes */
+		}
+		
+		/* Reorder tables for mobile so Latest Jobs is next to Results */
+		.grid-container > .box:nth-child(1) { order: 1; } /* Results */
+		.grid-container > .box:nth-child(3) { order: 2; } /* Latest Jobs */
+		.grid-container > .box:nth-child(2) { order: 3; } /* Admit Cards */
+		.grid-container > .box:nth-child(4) { order: 4; } /* Admission */
+		.grid-container > .box:nth-child(5) { order: 5; } /* Answer Key */
+		.grid-container > .box:nth-child(6) { order: 6; } /* Certificate */
+		
+		/* Fix headers */
+		.box-header {
+			font-size: 16px;
+			padding: 4px;
+			white-space: nowrap;
+			overflow: hidden;
+		}
+
+		/* Fix list items and padding to match the classic screenshot perfectly */
+		.box-list {
+			padding: 12px 5px 12px 18px; /* Perfectly aligns bullet points with the orange border */
+			line-height: 1.12;
+		}
+		
+		.box-list li {
+			margin-bottom: 9px; /* Exact official sarkariresult gap between job points on mobile */
+			line-height: 1.12; /* Explicitly overrides body line-height 1.6 on mobile */
+		}
+		
+		.box-list li a {
+			font-family: Arial, Helvetica, sans-serif;
+			font-size: 13px; /* Exact classic font size matching screenshot */
+			line-height: 1.12; /* Tighter line height to eliminate large gap between wrapped text lines */
+			letter-spacing: normal; /* Natural letter spacing without squishing */
+			display: inline; /* Natural wrap */
+		}
+	}
+</style>

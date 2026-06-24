@@ -1,0 +1,666 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const certificateStates = (await getCollection('certificateStates')).filter(s => !s.slug.includes('backup'));
+
+const title = "Non-Creamy Layer (NCL) Certificate Verification & Apply Online | All States";
+const description = "Select your state to view official portals for Non-Creamy Layer (NCL) Certificate online verification and apply across Block, Sub-Division, and District levels.";
+---
+
+<Layout title={title} description={description}>
+	<div class="states-page-container">
+		<!-- HEADER & SEARCH BAR -->
+		<div class="header-section">
+			<h1 class="page-title">Non-Creamy Layer (NCL) Certificate</h1>
+			<p class="page-subtitle">Select your state for official NCL Certificate Apply & Verification links</p>
+			
+			<div class="search-container">
+				<input 
+					type="text" 
+					id="stateSearch" 
+					placeholder="🔍 Search your state (e.g., Uttar Pradesh, Bihar)..." 
+					class="search-input"
+				/>
+			</div>
+		</div>
+
+		<!-- STATE CARDS GRID -->
+		<div class="state-cards-grid" id="statesGrid">
+			{certificateStates.map((stateObj) => {
+				const cert = stateObj.data.nclCertificate || {};
+				const generalLinks = cert.links || [];
+				const blockLinks = cert.blockLevelLinks || [];
+				const sdoLinks = cert.subDivisionLevelLinks || [];
+				const districtLinks = cert.districtLevelLinks || [];
+				const hasLinks = generalLinks.length > 0 || blockLinks.length > 0 || sdoLinks.length > 0 || districtLinks.length > 0;
+
+				return (
+					<div class="state-card" data-state-name={stateObj.data.stateName.toLowerCase()}>
+						<div class="card-header">
+							<div class="state-name">{stateObj.data.stateName}</div>
+							<div class="card-badge">Certificate</div>
+						</div>
+
+						<!-- DESKTOP LINKS CONTAINER (Visible on Desktop, hidden on Mobile/Tab) -->
+						<div class="desktop-links-container">
+							{/* GENERAL LINKS */}
+							{generalLinks.length > 0 && (
+								<div class="link-section">
+									<h3 class="section-title general-title">General Links</h3>
+									<ul class="state-links-list">
+										{generalLinks.map((link) => (
+											<li>
+												<a href={link.url} target="_blank" rel="noopener noreferrer" class="state-blue-link">
+													{link.label}
+												</a>
+											</li>
+										))}
+									</ul>
+								</div>
+							)}
+
+							{/* BLOCK LEVEL LINKS */}
+							{blockLinks.length > 0 && (
+								<div class="link-section">
+									<h3 class="section-title block-title">Block-Level Links</h3>
+									<ul class="state-links-list">
+										{blockLinks.map((link) => (
+											<li>
+												<a href={link.url} target="_blank" rel="noopener noreferrer" class="state-blue-link">
+													{link.label}
+												</a>
+											</li>
+										))}
+									</ul>
+								</div>
+							)}
+
+							{/* SUB-DIVISION LEVEL LINKS */}
+							{sdoLinks.length > 0 && (
+								<div class="link-section">
+									<h3 class="section-title sdo-title">Sub-Division Level Links</h3>
+									<ul class="state-links-list">
+										{sdoLinks.map((link) => (
+											<li>
+												<a href={link.url} target="_blank" rel="noopener noreferrer" class="state-blue-link">
+													{link.label}
+												</a>
+											</li>
+										))}
+									</ul>
+								</div>
+							)}
+
+							{/* DISTRICT LEVEL LINKS */}
+							{districtLinks.length > 0 && (
+								<div class="link-section">
+									<h3 class="section-title district-title">District Level Links</h3>
+									<ul class="state-links-list">
+										{districtLinks.map((link) => (
+											<li>
+												<a href={link.url} target="_blank" rel="noopener noreferrer" class="state-blue-link">
+													{link.label}
+												</a>
+											</li>
+										))}
+									</ul>
+								</div>
+							)}
+
+							{!hasLinks && (
+								<p class="no-links-text">No links added yet in Admin panel.</p>
+							)}
+						</div>
+
+						<!-- MOBILE/TABLET CLICKABLE ACTION (Hidden on Desktop) -->
+						<div class="mobile-action-container">
+							<button 
+								class="open-links-modal-btn" 
+								data-state={stateObj.data.stateName}
+								data-general={JSON.stringify(generalLinks)}
+								data-block={JSON.stringify(blockLinks)}
+								data-sdo={JSON.stringify(sdoLinks)}
+								data-district={JSON.stringify(districtLinks)}
+							>
+								View All Level Links ➔
+							</button>
+						</div>
+					</div>
+				);
+			})}
+		</div>
+	</div>
+
+	<!-- MOBILE / TABLET LINKS MODAL -->
+	<div id="linksModal" class="modal-overlay">
+		<div class="modal-container">
+			<div class="modal-header">
+				<h2 id="modalStateName">State Links</h2>
+				<button id="closeModalBtn" class="modal-close-btn">&times;</button>
+			</div>
+			<div class="modal-body" id="modalBodyContent">
+				<!-- Dynamically injected via JavaScript -->
+			</div>
+			<div class="modal-footer">
+				<button id="closeModalFooterBtn" class="modal-footer-close-btn">Close</button>
+			</div>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		// SEARCH BAR FILTERING LOGIC (Strictly filters by State Name only)
+		const searchInput = document.getElementById('stateSearch') as HTMLInputElement;
+		const stateCards = document.querySelectorAll('.state-card');
+
+		if (searchInput) {
+			searchInput.addEventListener('input', (e) => {
+				const query = (e.target as HTMLInputElement).value.toLowerCase().trim();
+				stateCards.forEach((card) => {
+					const stateName = card.getAttribute('data-state-name') || '';
+					if (stateName.includes(query)) {
+						(card as HTMLElement).style.display = 'flex';
+					} else {
+						(card as HTMLElement).style.display = 'none';
+					}
+				});
+			});
+		}
+
+		// MOBILE MODAL LOGIC
+		const modal = document.getElementById('linksModal');
+		const modalStateName = document.getElementById('modalStateName');
+		const modalBodyContent = document.getElementById('modalBodyContent');
+		const closeModalBtn = document.getElementById('closeModalBtn');
+		const closeModalFooterBtn = document.getElementById('closeModalFooterBtn');
+
+		const openModalBtns = document.querySelectorAll('.open-links-modal-btn, .state-card');
+
+		openModalBtns.forEach(btn => {
+			btn.addEventListener('click', (e) => {
+				if (window.innerWidth > 768) return; // Only trigger modal on Mobile & Tablet
+				
+				// Find correct button data
+				const targetBtn = (e.currentTarget as HTMLElement).closest('.state-card')?.querySelector('.open-links-modal-btn');
+				if (!targetBtn) return;
+
+				const stateName = targetBtn.getAttribute('data-state') || 'State Links';
+				
+				let generalLinks = [];
+				let blockLinks = [];
+				let sdoLinks = [];
+				let districtLinks = [];
+				try { generalLinks = JSON.parse(targetBtn.getAttribute('data-general') || '[]'); } catch(err) {}
+				try { blockLinks = JSON.parse(targetBtn.getAttribute('data-block') || '[]'); } catch(err) {}
+				try { sdoLinks = JSON.parse(targetBtn.getAttribute('data-sdo') || '[]'); } catch(err) {}
+				try { districtLinks = JSON.parse(targetBtn.getAttribute('data-district') || '[]'); } catch(err) {}
+
+				if (modalStateName) modalStateName.textContent = stateName + ' - NCL Certificate';
+				if (modalBodyContent) {
+					modalBodyContent.innerHTML = '';
+					let hasAnyLinks = false;
+
+					const appendSection = (title: string, links: any[], className: string) => {
+						if (links && links.length > 0) {
+							hasAnyLinks = true;
+							const sectionDiv = document.createElement('div');
+							sectionDiv.className = 'modal-link-section';
+							
+							const h3 = document.createElement('h3');
+							h3.className = 'modal-section-title ' + className;
+							h3.textContent = title;
+							sectionDiv.appendChild(h3);
+
+							const ul = document.createElement('ul');
+							ul.className = 'modal-links-list';
+							links.forEach((l: any) => {
+								const li = document.createElement('li');
+								const a = document.createElement('a');
+								a.href = l.url;
+								a.target = '_blank';
+								a.rel = 'noopener noreferrer';
+								a.className = 'modal-blue-link';
+								a.textContent = l.label;
+								li.appendChild(a);
+								ul.appendChild(li);
+							});
+							sectionDiv.appendChild(ul);
+							modalBodyContent.appendChild(sectionDiv);
+						}
+					};
+
+					appendSection('General Links', generalLinks, 'general-title');
+					appendSection('Block-Level Links', blockLinks, 'block-title');
+					appendSection('Sub-Division Level Links', sdoLinks, 'sdo-title');
+					appendSection('District Level Links', districtLinks, 'district-title');
+
+					if (!hasAnyLinks) {
+						modalBodyContent.innerHTML = '<p class="no-links">No links added in Admin panel yet.</p>';
+					}
+				}
+
+				if (modal) modal.classList.add('active');
+			});
+		});
+
+		const closeModal = () => {
+			if (modal) modal.classList.remove('active');
+		};
+
+		if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+		if (closeModalFooterBtn) closeModalFooterBtn.addEventListener('click', closeModal);
+		if (modal) modal.addEventListener('click', (e) => {
+			if (e.target === modal) closeModal();
+		});
+	});
+</script>
+
+<style>
+	.states-page-container {
+		max-width: 1200px;
+		margin: 20px auto;
+		padding: 0 15px;
+	}
+
+	/* HEADER & SEARCH */
+	.header-section {
+		text-align: center;
+		background: #ffffff;
+		border: 2px solid #8B0000;
+		border-radius: 12px;
+		padding: 30px 20px;
+		margin-bottom: 30px;
+		box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+	}
+
+	.page-title {
+		font-family: 'Poppins', sans-serif;
+		font-size: 32px;
+		font-weight: 700;
+		color: #8B0000;
+		margin-bottom: 10px;
+	}
+
+	.page-subtitle {
+		font-size: 16px;
+		color: #555;
+		margin-bottom: 25px;
+	}
+
+	.search-container {
+		max-width: 600px;
+		margin: 0 auto;
+	}
+
+	.search-input {
+		width: 100%;
+		padding: 14px 22px;
+		font-size: 16px;
+		border: 2px solid #8B0000;
+		border-radius: 30px;
+		outline: none;
+		transition: all 0.3s ease;
+		box-shadow: 0 2px 8px rgba(139,0,0,0.1);
+	}
+
+	.search-input:focus {
+		border-color: #ff0000;
+		box-shadow: 0 4px 15px rgba(255,0,0,0.2);
+	}
+
+	/* CARDS GRID */
+	.state-cards-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 25px;
+	}
+
+	.state-card {
+		background: #ffffff;
+		border: 1px solid #ffcc66;
+		border-radius: 10px;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+		transition: transform 0.2s ease, box-shadow 0.2s ease;
+	}
+
+	.state-card:hover {
+		transform: translateY(-4px);
+		box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+		border-color: #ff9900;
+	}
+
+	.card-header {
+		background: #8B0000;
+		padding: 15px 18px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.state-name {
+		color: #ffffff;
+		font-family: 'Poppins', sans-serif;
+		font-size: 20px;
+		font-weight: 700;
+	}
+
+	.card-badge {
+		background: #ffcc66;
+		color: #8B0000;
+		font-size: 11px;
+		font-weight: bold;
+		padding: 3px 8px;
+		border-radius: 20px;
+		text-transform: uppercase;
+	}
+
+	/* DESKTOP LINKS CONTAINER */
+	.desktop-links-container {
+		padding: 20px 22px;
+		flex-grow: 1;
+	}
+
+	.link-section {
+		margin-bottom: 22px;
+		padding-bottom: 15px;
+		border-bottom: 1px dashed #e0e0e0;
+	}
+
+	.link-section:last-child {
+		margin-bottom: 0;
+		padding-bottom: 0;
+		border-bottom: none;
+	}
+
+	.section-title {
+		font-family: 'Poppins', sans-serif;
+		font-size: 15px;
+		font-weight: 700;
+		margin-bottom: 10px;
+		padding-left: 8px;
+		border-left: 4px solid #8B0000;
+	}
+
+	.general-title { border-left-color: #0066cc; color: #0066cc; }
+	.block-title { border-left-color: #2e7d32; color: #2e7d32; }
+	.sdo-title { border-left-color: #e65100; color: #e65100; }
+	.district-title { border-left-color: #6a1b29; color: #6a1b29; }
+
+	.state-links-list {
+		list-style-type: disc;
+		padding-left: 20px;
+		margin: 0;
+	}
+
+	.state-links-list li {
+		margin-bottom: 10px;
+		color: #333;
+	}
+
+	.state-links-list li:last-child {
+		margin-bottom: 0;
+	}
+
+	.state-blue-link {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 15px;
+		color: #0000ff;
+		text-decoration: underline;
+		line-height: 1.25;
+		display: inline;
+		font-weight: 600;
+	}
+
+	.state-blue-link:hover {
+		color: #ff0000;
+	}
+
+	.no-links-text {
+		color: #888;
+		font-style: italic;
+		font-size: 14px;
+		text-align: center;
+		margin: 10px 0;
+	}
+
+	/* MOBILE BUTTON */
+	.mobile-action-container {
+		display: none;
+		padding: 15px;
+		background: #fcfcfc;
+		border-top: 1px solid #eee;
+		text-align: center;
+	}
+
+	.open-links-modal-btn {
+		width: 100%;
+		background: linear-gradient(135deg, #0066cc, #004c99);
+		color: #ffffff;
+		border: none;
+		padding: 12px 20px;
+		font-size: 15px;
+		font-weight: 600;
+		border-radius: 6px;
+		cursor: pointer;
+		font-family: 'Poppins', sans-serif;
+		box-shadow: 0 3px 8px rgba(0, 102, 204, 0.3);
+		transition: all 0.2s ease;
+	}
+
+	.open-links-modal-btn:hover {
+		background: linear-gradient(135deg, #0080ff, #0056b3);
+		transform: translateY(-1px);
+		box-shadow: 0 5px 12px rgba(0, 102, 204, 0.4);
+	}
+
+	/* MOBILE & TABLET MEDIA QUERIES */
+	@media (max-width: 768px) {
+		.state-cards-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 15px;
+		}
+
+		.header-section {
+			padding: 20px 15px;
+			margin-bottom: 20px;
+		}
+
+		.page-title {
+			font-size: 22px;
+		}
+
+		.page-subtitle {
+			font-size: 14px;
+			margin-bottom: 15px;
+		}
+
+		.search-input {
+			padding: 10px 16px;
+			font-size: 14px;
+		}
+
+		.desktop-links-container {
+			display: none; /* Hide links on mobile/tab */
+		}
+
+		.mobile-action-container {
+			display: block; /* Show View Links button */
+		}
+
+		.state-card {
+			cursor: pointer;
+		}
+
+		.card-header {
+			padding: 12px 14px;
+		}
+
+		.state-name {
+			font-size: 17px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.state-cards-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	/* MODAL STYLES */
+	.modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(0, 0, 0, 0.6);
+		backdrop-filter: blur(5px);
+		-webkit-backdrop-filter: blur(5px);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 100000;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.3s ease;
+	}
+
+	.modal-overlay.active {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.modal-container {
+		background: #ffffff;
+		width: 90%;
+		max-width: 480px;
+		border-radius: 14px;
+		border: 2px solid #8B0000;
+		box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+		transform: scale(0.9);
+		transition: transform 0.3s ease;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		max-height: 85vh;
+	}
+
+	.modal-overlay.active .modal-container {
+		transform: scale(1);
+	}
+
+	.modal-header {
+		background: #8B0000;
+		color: #ffffff;
+		padding: 16px 20px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.modal-header h2 {
+		font-family: 'Poppins', sans-serif;
+		font-size: 20px;
+		margin: 0;
+		font-weight: 700;
+	}
+
+	.modal-close-btn {
+		background: transparent;
+		border: none;
+		color: #ffffff;
+		font-size: 28px;
+		cursor: pointer;
+		line-height: 1;
+		padding: 0;
+	}
+
+	.modal-body {
+		padding: 24px 20px;
+		overflow-y: auto;
+	}
+
+	:global(.modal-link-section) {
+		margin-bottom: 22px;
+		padding-bottom: 16px;
+		border-bottom: 1px dashed #e0e0e0;
+	}
+
+	:global(.modal-link-section:last-child) {
+		margin-bottom: 0;
+		padding-bottom: 0;
+		border-bottom: none;
+	}
+
+	:global(.modal-section-title) {
+		font-family: 'Poppins', sans-serif;
+		font-size: 16px;
+		font-weight: 700;
+		margin-bottom: 12px;
+		padding-left: 8px;
+		border-left: 4px solid #8B0000;
+	}
+
+	:global(.modal-links-list) {
+		list-style-type: disc;
+		padding-left: 20px;
+		margin: 0;
+	}
+
+	:global(.modal-links-list li) {
+		margin-bottom: 14px;
+		color: #333;
+	}
+
+	:global(.modal-links-list li:last-child) {
+		margin-bottom: 0;
+	}
+
+	:global(.modal-blue-link) {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 16px;
+		color: #0000ff;
+		text-decoration: underline;
+		font-weight: 600;
+		line-height: 1.3;
+		display: inline;
+	}
+
+	:global(.modal-blue-link:hover) {
+		color: #ff0000;
+	}
+
+	:global(.no-links) {
+		color: #888;
+		font-style: italic;
+		text-align: center;
+		margin: 10px 0;
+	}
+
+	.modal-footer {
+		padding: 14px 20px;
+		background: #f9f9f9;
+		border-top: 1px solid #eee;
+		text-align: right;
+	}
+
+	.modal-footer-close-btn {
+		background: #333;
+		color: #fff;
+		border: none;
+		padding: 8px 18px;
+		border-radius: 6px;
+		font-weight: 600;
+		cursor: pointer;
+		font-family: 'Poppins', sans-serif;
+	}
+
+	.modal-footer-close-btn:hover {
+		background: #555;
+	}
+</style>
