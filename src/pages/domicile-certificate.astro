@@ -28,11 +28,11 @@ const description = "Select your state to view official portals for Domicile Cer
 		<!-- STATE CARDS GRID -->
 		<div class="state-cards-grid" id="statesGrid">
 			{certificateStates.map((stateObj) => {
-				const cert = stateObj.data.domicileCertificate || {};
-				const generalLinks = cert.links || [];
-				const blockLinks = cert.blockLevelLinks || [];
-				const sdoLinks = cert.subDivisionLevelLinks || [];
-				const districtLinks = cert.districtLevelLinks || [];
+				const cert = stateObj.data.domicileCertificate;
+				const generalLinks = cert?.links || [];
+				const blockLinks = cert?.blockLevelLinks || [];
+				const sdoLinks = cert?.subDivisionLevelLinks || [];
+				const districtLinks = cert?.districtLevelLinks || [];
 				const hasLinks = generalLinks.length > 0 || blockLinks.length > 0 || sdoLinks.length > 0 || districtLinks.length > 0;
 
 				return (

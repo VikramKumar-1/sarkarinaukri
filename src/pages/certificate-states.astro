@@ -27,7 +27,13 @@ const description = "Select your state to view official portals for Caste Certif
 
 		<!-- STATE CARDS GRID -->
 		<div class="state-cards-grid" id="statesGrid">
-			{certificateStates.map((stateObj) => (
+			{certificateStates.map((stateObj) => {
+				const cert = stateObj.data.casteCertificate;
+				const generalLinks = cert?.links || [];
+				const blockLinks = cert?.blockLevelLinks || [];
+				const sdoLinks = cert?.subDivisionLevelLinks || [];
+				const districtLinks = cert?.districtLevelLinks || [];
+				return (
 				<div class="state-card" data-state-name={stateObj.data.stateName.toLowerCase()}>
 					<div class="card-header">
 						<div class="state-name">{stateObj.data.stateName}</div>
@@ -37,11 +43,11 @@ const description = "Select your state to view official portals for Caste Certif
 					<!-- DESKTOP LINKS CONTAINER (Visible on Desktop, hidden on Mobile/Tab) -->
 					<div class="desktop-links-container">
 						{/* GENERAL LINKS */}
-						{stateObj.data.links && stateObj.data.links.length > 0 && (
+						{generalLinks.length > 0 && (
 							<div class="link-section">
 								<h3 class="section-title general-title">General State Links</h3>
 								<ul class="state-links-list">
-									{stateObj.data.links.map((link) => (
+									{generalLinks.map((link) => (
 										<li>
 											<a href={link.url} target="_blank" rel="noopener noreferrer" class="state-blue-link">
 												{link.label}
@@ -53,11 +59,11 @@ const description = "Select your state to view official portals for Caste Certif
 						)}
 
 						{/* BLOCK LEVEL LINKS */}
-						{stateObj.data.blockLevelLinks && stateObj.data.blockLevelLinks.length > 0 && (
+						{blockLinks.length > 0 && (
 							<div class="link-section">
 								<h3 class="section-title block-title">Block-Level Links</h3>
 								<ul class="state-links-list">
-									{stateObj.data.blockLevelLinks.map((link) => (
+									{blockLinks.map((link) => (
 										<li>
 											<a href={link.url} target="_blank" rel="noopener noreferrer" class="state-blue-link">
 												{link.label}
@@ -69,11 +75,11 @@ const description = "Select your state to view official portals for Caste Certif
 						)}
 
 						{/* SUB-DIVISION LEVEL LINKS */}
-						{stateObj.data.subDivisionLevelLinks && stateObj.data.subDivisionLevelLinks.length > 0 && (
+						{sdoLinks.length > 0 && (
 							<div class="link-section">
 								<h3 class="section-title sdo-title">Sub-Division Level Links</h3>
 								<ul class="state-links-list">
-									{stateObj.data.subDivisionLevelLinks.map((link) => (
+									{sdoLinks.map((link) => (
 										<li>
 											<a href={link.url} target="_blank" rel="noopener noreferrer" class="state-blue-link">
 												{link.label}
@@ -85,11 +91,11 @@ const description = "Select your state to view official portals for Caste Certif
 						)}
 
 						{/* DISTRICT LEVEL LINKS */}
-						{stateObj.data.districtLevelLinks && stateObj.data.districtLevelLinks.length > 0 && (
+						{districtLinks.length > 0 && (
 							<div class="link-section">
 								<h3 class="section-title district-title">District Level Links</h3>
 								<ul class="state-links-list">
-									{stateObj.data.districtLevelLinks.map((link) => (
+									{districtLinks.map((link) => (
 										<li>
 											<a href={link.url} target="_blank" rel="noopener noreferrer" class="state-blue-link">
 												{link.label}
@@ -100,7 +106,7 @@ const description = "Select your state to view official portals for Caste Certif
 							</div>
 						)}
 
-						{(!stateObj.data.links?.length && !stateObj.data.blockLevelLinks?.length && !stateObj.data.subDivisionLevelLinks?.length && !stateObj.data.districtLevelLinks?.length) && (
+						{(!generalLinks.length && !blockLinks.length && !sdoLinks.length && !districtLinks.length) && (
 							<p class="no-links-text">No links added yet in Admin panel.</p>
 						)}
 					</div>
@@ -110,16 +116,16 @@ const description = "Select your state to view official portals for Caste Certif
 						<button 
 							class="open-links-modal-btn" 
 							data-state={stateObj.data.stateName}
-							data-general={JSON.stringify(stateObj.data.links || [])}
-							data-block={JSON.stringify(stateObj.data.blockLevelLinks || [])}
-							data-sdo={JSON.stringify(stateObj.data.subDivisionLevelLinks || [])}
-							data-district={JSON.stringify(stateObj.data.districtLevelLinks || [])}
+							data-general={JSON.stringify(generalLinks)}
+							data-block={JSON.stringify(blockLinks)}
+							data-sdo={JSON.stringify(sdoLinks)}
+							data-district={JSON.stringify(districtLinks)}
 						>
 							View All Level Links ➔
 						</button>
 					</div>
 				</div>
-			))}
+			)})}
 		</div>
 	</div>
 

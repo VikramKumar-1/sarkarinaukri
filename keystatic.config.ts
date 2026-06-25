@@ -165,7 +165,7 @@ Good news for job seekers! The [DEPARTMENT] is inviting online applications for 
           formatting: true,
           dividers: true,
           links: true,
-          images: false,
+          images: undefined,
           tables: true,
         }),
       },

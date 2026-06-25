@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import markdoc from '@astrojs/markdoc';
 import keystatic from '@keystatic/astro';
+import cloudflare from '@astrojs/cloudflare';
 import fs from 'fs';
 import { execSync } from 'child_process';
 
@@ -29,6 +30,7 @@ function remarkModifiedTime() {
 export default defineConfig({
   site: 'https://www.sarkariresult.com', /* Change this to your real domain when launching */
   output: 'hybrid',
+  adapter: cloudflare(),
   prefetch: true, /* Instantly preloads links when user hovers over them */
   integrations: [
     react(),

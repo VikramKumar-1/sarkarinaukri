@@ -11,7 +11,7 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { Content, remarkPluginFrontmatter } = await entry.render();
+const { Content } = await entry.render();
 const { 
   title, shortInfo, 
   departmentName, postTitleName, advtNoShortDetails,
@@ -23,8 +23,8 @@ const {
   seoTitle, seoDescription, seoKeywords 
 } = entry.data;
 
-// Automatically capture the exact time the user clicked SAVE!
-const postDate = remarkPluginFrontmatter.lastModified || new Date().toISOString();
+// Automatically capture postDate
+const postDate = entry.data.postDate || new Date().toISOString();
 
 // Format the date to look like Sarkari Result: "22 June 2026 | 10:15 PM"
 const formattedDate = new Date(postDate).toLocaleString('en-IN', {
@@ -123,7 +123,7 @@ const faqSchema = JSON.stringify(faqSchemaObj);
 		<table class="sarkari-master-table">
 			<!-- SECTION 1: HEADERS -->
 			<tr>
-				<td colspan="2" align="center" style="padding: 15px;">
+				<td colspan={2} style="padding: 15px; text-align: center;">
 					{departmentName && <h2 style="color: #ff00ff; font-size: 24px; margin-bottom: 10px; margin-top: 0;">{departmentName}</h2>}
 					{postTitleName && <h3 style="color: #008000; font-size: 22px; margin-bottom: 10px; margin-top: 0;">{postTitleName}</h3>}
 					{advtNoShortDetails && <h4 style="color: #ff00ff; font-size: 20px; margin-bottom: 15px; margin-top: 0;">{advtNoShortDetails}</h4>}
@@ -133,14 +133,14 @@ const faqSchema = JSON.stringify(faqSchemaObj);
 
 			<!-- SECTION 2: DATES & FEES -->
 			<tr>
-				<td width="50%" valign="top" style="padding: 15px; border-right: 1px solid #000;">
-					<h2 align="center" style="color: #008000; font-size: 24px; margin-bottom: 15px; margin-top: 0;">Important Dates</h2>
+				<td style="width: 50%; vertical-align: top; padding: 15px; border-right: 1px solid #000;">
+					<h2 style="text-align: center; color: #008000; font-size: 24px; margin-bottom: 15px; margin-top: 0;">Important Dates</h2>
 					<ul style="margin-left: 20px;">
 						{importantDates && importantDates.split('\n').map(date => date.trim() ? <li style="font-size: 18px; margin-bottom: 8px;">{date}</li> : null)}
 					</ul>
 				</td>
-				<td width="50%" valign="top" style="padding: 15px;">
-					<h2 align="center" style="color: #008000; font-size: 24px; margin-bottom: 15px; margin-top: 0;">Application Fees</h2>
+				<td style="width: 50%; vertical-align: top; padding: 15px;">
+					<h2 style="text-align: center; color: #008000; font-size: 24px; margin-bottom: 15px; margin-top: 0;">Application Fees</h2>
 					<ul style="margin-left: 20px;">
 						{applicationFee && applicationFee.split('\n').map(fee => fee.trim() ? <li style="font-size: 18px; margin-bottom: 8px;">{fee}</li> : null)}
 					</ul>
@@ -150,8 +150,8 @@ const faqSchema = JSON.stringify(faqSchemaObj);
 			<!-- SECTION 3: AGE LIMIT -->
 			{(ageLimitTitle || ageLimitDetails) && (
 				<tr>
-					<td colspan="2" style="padding: 15px;">
-						{ageLimitTitle && <h2 align="center" style="font-size: 24px; margin-bottom: 15px; color: #ff00ff; margin-top: 0;">{ageLimitTitle}</h2>}
+					<td colspan={2} style="padding: 15px;">
+						{ageLimitTitle && <h2 style="text-align: center; font-size: 24px; margin-bottom: 15px; color: #ff00ff; margin-top: 0;">{ageLimitTitle}</h2>}
 						<ul style="margin-left: 20px;">
 							{ageLimitDetails && ageLimitDetails.split('\n').map(item => item.trim() ? <li style="font-size: 18px; margin-bottom: 8px;">{item}</li> : null)}
 						</ul>
@@ -162,8 +162,8 @@ const faqSchema = JSON.stringify(faqSchemaObj);
 			<!-- SECTION 4: VACANCY DETAILS -->
 			{(vacancyTableTitle || (vacancyDetails && vacancyDetails.length > 0) || (categoryVacancyDetails && categoryVacancyDetails.length > 0) || (physicalEligibility && physicalEligibility.length > 0)) && (
 				<tr>
-					<td colspan="2" style="padding: 15px;">
-						{vacancyTableTitle && <h2 align="center" style="font-size: 24px; margin-bottom: 15px; color: #ff00ff; margin-top: 0;">{vacancyTableTitle}</h2>}
+					<td colspan={2} style="padding: 15px;">
+						{vacancyTableTitle && <h2 style="text-align: center; font-size: 24px; margin-bottom: 15px; color: #ff00ff; margin-top: 0;">{vacancyTableTitle}</h2>}
 						
 						{vacancyDetails && vacancyDetails.length > 0 && (
 							<table class="inner-table">
@@ -179,7 +179,7 @@ const faqSchema = JSON.stringify(faqSchemaObj);
 										<tr>
 											<td>{vacancy.postName}</td>
 											<td>{vacancy.totalPost}</td>
-											<td align="left">
+											<td style="text-align: left;">
 												<ul style="margin-left: 15px; padding-left: 0;">
 													{vacancy.eligibility.split('\n').map(line => line.trim() ? <li style="margin-bottom: 5px;">{line}</li> : null)}
 												</ul>
@@ -245,16 +245,16 @@ const faqSchema = JSON.stringify(faqSchemaObj);
 				</tr>
 			)}
 
-			<!-- SECTION 4.5: DISTRICT VACANCY DETAILS (From the screenshot) -->
+			<!-- SECTION 4.5: DISTRICT VACANCY DETAILS -->
 			{(districtVacancyTitle || (districtVacancyDetails && districtVacancyDetails.length > 0)) && (
 				<tr>
-					<td colspan="2" style="padding: 15px;">
+					<td colspan={2} style="padding: 15px;">
 						{districtVacancyDetails && districtVacancyDetails.length > 0 && (
 							<table class="inner-table" style="margin-top: 15px;">
 								<thead>
 									{districtVacancyTitle && (
 										<tr>
-											<th colspan="4" style="background-color: #000033; color: white; padding: 12px; font-size: 20px;">
+											<th colspan={4} style="background-color: #000033; color: white; padding: 12px; font-size: 20px;">
 												{districtVacancyTitle}
 											</th>
 										</tr>
@@ -288,8 +288,8 @@ const faqSchema = JSON.stringify(faqSchemaObj);
 			<!-- SECTION 5: HOW TO FILL -->
 			{(howToFillTitle || howToFillDetails) && (
 				<tr>
-					<td colspan="2" style="padding: 15px;">
-						{howToFillTitle && <h2 align="center" style="font-size: 24px; margin-bottom: 15px; color: #008000; margin-top: 0;">{howToFillTitle}</h2>}
+					<td colspan={2} style="padding: 15px;">
+						{howToFillTitle && <h2 style="text-align: center; font-size: 24px; margin-bottom: 15px; color: #008000; margin-top: 0;">{howToFillTitle}</h2>}
 						<ul style="margin-left: 20px;">
 							{howToFillDetails && howToFillDetails.split('\n').map(item => item.trim() ? <li style="font-size: 18px; margin-bottom: 8px;">{item}</li> : null)}
 						</ul>
@@ -297,10 +297,10 @@ const faqSchema = JSON.stringify(faqSchemaObj);
 				</tr>
 			)}
 
-			<!-- SECTION 6: MARKDOWN CONTENT (For extra text added by user) -->
+			<!-- SECTION 6: MARKDOWN CONTENT -->
 			<tr>
-				<td colspan="2" style="padding: 15px;">
-					<h2 align="center" style="font-size: 20px; margin-bottom: 15px; color: #ff00ff; margin-top: 0;">Interested Candidates Can Read the Full Notification Before Apply Online</h2>
+				<td colspan={2} style="padding: 15px;">
+					<h2 style="text-align: center; font-size: 20px; margin-bottom: 15px; color: #ff00ff; margin-top: 0;">Interested Candidates Can Read the Full Notification Before Apply Online</h2>
 					<div class="markdown-content">
 						<Content />
 					</div>
@@ -310,14 +310,14 @@ const faqSchema = JSON.stringify(faqSchemaObj);
 			<!-- SECTION 7: IMPORTANT LINKS -->
 			{importantLinks && importantLinks.length > 0 && (
 				<tr>
-					<td colspan="2" style="padding: 0;">
-						<h2 align="center" style="color: #008000; font-size: 24px; padding: 15px; border-bottom: 1px solid #000; margin: 0;">Some Useful Important Links</h2>
+					<td colspan={2} style="padding: 0;">
+						<h2 style="text-align: center; color: #008000; font-size: 24px; padding: 15px; border-bottom: 1px solid #000; margin: 0;">Some Useful Important Links</h2>
 						<table class="inner-table-links" style="width: 100%; border-collapse: collapse;">
 							<tbody>
 								{importantLinks.map((link, index) => (
 									<tr>
-										<td width="50%" align="center" style={`padding: 15px; border-right: 1px solid #000; color: #ff00ff; font-size: 20px; font-weight: bold; ${index !== importantLinks.length - 1 ? 'border-bottom: 1px solid #000;' : ''}`}>{link.linkName}</td>
-										<td width="50%" align="center" style={`padding: 15px; font-size: 20px; font-weight: bold; ${index !== importantLinks.length - 1 ? 'border-bottom: 1px solid #000;' : ''}`}>
+										<td style={`width: 50%; text-align: center; padding: 15px; border-right: 1px solid #000; color: #ff00ff; font-size: 20px; font-weight: bold; ${index !== importantLinks.length - 1 ? 'border-bottom: 1px solid #000;' : ''}`}>{link.linkName}</td>
+										<td style={`width: 50%; text-align: center; padding: 15px; font-size: 20px; font-weight: bold; ${index !== importantLinks.length - 1 ? 'border-bottom: 1px solid #000;' : ''}`}>
 											{link.url ? <a href={link.url} target="_blank" style="color: #0000ff; text-decoration: none;">Click Here</a> : 'Link Available Soon'}
 										</td>
 									</tr>
@@ -328,11 +328,11 @@ const faqSchema = JSON.stringify(faqSchemaObj);
 				</tr>
 			)}
 
-			<!-- SECTION 8: FAQ (To prevent SEO degrade) -->
+			<!-- SECTION 8: FAQ -->
 			{displayFaq && displayFaq.length > 0 && (
 				<tr>
-					<td colspan="2" style="padding: 0;">
-						<h2 align="center" style="background-color: #800000; color: #ffffff; font-size: 20px; padding: 10px; border-bottom: 1px solid #000; margin: 0;">Frequently Asked Questions</h2>
+					<td colspan={2} style="padding: 0;">
+						<h2 style="text-align: center; background-color: #800000; color: #ffffff; font-size: 20px; padding: 10px; border-bottom: 1px solid #000; margin: 0;">Frequently Asked Questions</h2>
 						<div style="padding: 15px;">
 							{displayFaq.map((item, index) => (
 								<div style="margin-bottom: 20px;">

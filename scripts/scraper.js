@@ -20,7 +20,7 @@ if (!fs.existsSync(JOBS_DIR)) {
   fs.mkdirSync(JOBS_DIR, { recursive: true });
 }
 
-async function scrapeLatestJobs() {
+export async function scrapeLatestJobs() {
   console.log('Fetching Latest Jobs from Sarkari Result RSS Feed...');
   try {
     const { data } = await axios.get(RSS_FEED_URL);
@@ -38,22 +38,32 @@ async function scrapeLatestJobs() {
 
     if (jobLinks.length === 0) {
       console.log('No jobs found in feed.');
-      return;
+      return { success: true, added: 0, skipped: 0, message: 'No jobs found in feed.' };
     }
 
     // Grab the 3 most recent absolute latest jobs
     const latestThree = jobLinks.slice(0, 3);
+    let added = 0;
+    let skipped = 0;
     
     for (const link of latestThree) {
-      await scrapeJobDetails(link);
+      const status = await scrapeJobDetails(link);
+      if (status === 'added') {
+        added++;
+      } else if (status === 'skipped') {
+        skipped++;
+      }
     }
+
+    return { success: true, added, skipped };
 
   } catch (error) {
     console.error('Error fetching RSS feed:', error.message);
+    return { success: false, error: error.message };
   }
 }
 
-async function scrapeJobDetails(url) {
+export async function scrapeJobDetails(url) {
   console.log(`Scraping Job Data: ${url}`);
   try {
     const { data } = await axios.get(url);
@@ -69,7 +79,7 @@ async function scrapeJobDetails(url) {
     const filePath = path.join(JOBS_DIR, slug);
     if (fs.existsSync(filePath)) {
       console.log(`Job already exists: ${slug}, skipping...`);
-      return;
+      return 'skipped';
     }
 
     // WordPress tables extraction
@@ -109,10 +119,16 @@ ${markdownContent}
 
     fs.writeFileSync(filePath, frontmatter, 'utf-8');
     console.log(`Successfully saved: ${slug}`);
+    return 'added';
 
   } catch (error) {
     console.error(`Error scraping ${url}:`, error.message);
+    throw error;
   }
 }
 
-scrapeLatestJobs();
+// Only auto-execute if run directly from the CLI
+const isMain = process.argv[1] && __filename === path.resolve(process.argv[1]);
+if (isMain) {
+  scrapeLatestJobs();
+}

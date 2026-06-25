@@ -33,8 +33,8 @@ const finalDesc = homepageSettings.customDescription || autoDesc;
 const finalKeywords = homepageSettings.customKeywords || autoKeywords;
 
 // Auto-populate boxes to always show perfectly aligned items
-const generateDummies = (category, count) => {
-	const dummyTitles = {
+const generateDummies = (category: string, count: number) => {
+	const dummyTitles: Record<string, string> = {
 		'results': 'SSC CGL Tier 1 Result 2026 Declared',
 		'admit-card': 'UPSC Civil Services Prelims Admit Card 2026',
 		'latest-jobs': 'UP Police Sub Inspector SI Online Form 2026',

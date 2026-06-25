@@ -54,8 +54,8 @@ const isHome = pathname === '/' || pathname === '/index.html';
 		<meta name="twitter:description" content={description} />
 
 		<!-- Google SEO Structured Data (JSON-LD) -->
-		{jobSchema && <script type="application/ld+json" set:html={jobSchema} />}
-		{faqSchema && <script type="application/ld+json" set:html={faqSchema} />}
+		{jobSchema && <script is:inline type="application/ld+json" set:html={jobSchema} />}
+		{faqSchema && <script is:inline type="application/ld+json" set:html={faqSchema} />}
 	</head>
 	<body>
 		<header class="header">
